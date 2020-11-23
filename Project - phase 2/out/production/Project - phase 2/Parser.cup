@@ -1,0 +1,201 @@
+import java_cup.runtime.*;
+
+parser code {:
+    CodeScanner scanner;
+    public parser(CodeScanner scanner){
+        this.scanner = scanner;
+    }
+    boolean msg = true;
+    public void msg(String str){
+        if (msg){
+            System.out.println(str);
+        }
+    }
+:}
+
+scan with{: return scanner.next_token(); :}
+
+
+terminal    /* operators */           plus, mult, minus, assign, divide, mod,
+            /* comparators */         lt, gt, le, ge, equal, nequal,
+                                      and, or, exclamation,
+            /* notations */           colon, semiColon, open_bracket,
+                                      close_bracket, open_brace, close_brace,
+                                      open_parenthese, close_parenthese, dot,
+            /* int */                 numbers,
+                                      bool_const,double_const,
+            /* key words */           keywords_class, keywords_extends, keywords_implements,
+                                      keywords_if,keywords_interface,keywords_null,
+                                      keywords_else , keywords_while,
+                                      keywords_for, keywords_return,
+                                      keywords_break, keywords_continue,
+                                      keywords_Print, keywords_this,keywords_Read, keywords_Integer,
+                                      keywords_ReadInteger, keywords_ReadLine,
+                                      keywords_new, key_words_NewArray,keywords_itod,
+                                      keywords_dtoi, keywords_itob,
+                                      keywords_btoi,
+
+            /* TYPES */               type_int,  type_double,  type_bool,  type_string, type_void,
+                                      keywords_private, keywords_public, keywords_protected;
+
+terminal String     identifier;
+
+nonterminal PROGRAM, DECLERATIONS,
+            CLASS_DECLARATION, VARIABLE_DECLARATION,
+            FUNCTION_DECLARATION,
+            INTERFACE_DECLARATION, STATEMENT_BLOCK,
+            STMT_BLOCK_1, STMT_BLOCK_2,
+            STATEMENT,EXPR, IF_STMT,ELSE, WHILE_STMT,
+            FOR_STMT, FOR_INIT, FOR_CONDITION, BREAK_STMT,
+            CONTINUE_STMT,
+            RETURN_STMT, RETURN_VAL, PRINT_STMT, PRINT_VAL,
+
+            VARIABLE, TYPE, INHERITANCE, IMPLEMENTATION,
+            ACCESSABILITY,FIELDS, FIELD,
+            FORMALS, FORMAL, PROTOTYPES, PROTOTYPE,
+            LVALUE, CALL, ACTUALS,ACTUAL, CONSTANT,
+            T1,T2;
+
+nonterminal Integer TERM;
+
+precedence left keywords_else;
+precedence left lt,nequal,equal, gt, le, ge;
+precedence left or;
+precedence left and;
+precedence left exclamation;
+precedence left plus, minus,or;
+precedence left mult,divide,and,mod;
+precedence left open_parenthese, open_brace,close_bracket,close_bracket;
+precedence left dot;
+precedence left double_const;
+
+
+
+PROGRAM ::=                 PROGRAM DECLERATIONS
+                          | DECLERATIONS;
+
+
+DECLERATIONS ::=            VARIABLE_DECLARATION
+                          | FUNCTION_DECLARATION
+                          | INTERFACE_DECLARATION
+                          | CLASS_DECLARATION;
+
+
+VARIABLE_DECLARATION ::=    VARIABLE semiColon;
+
+VARIABLE ::=                TYPE identifier
+                            | identifier identifier; // type r/r
+
+TYPE ::=                    type_int {:msg("type_int"); :}
+                          | type_double
+                          | type_bool
+                          | type_string
+
+                          | TYPE open_brace close_brace
+                          | identifier open_brace close_brace; // type r\r
+FUNCTION_DECLARATION ::=    TYPE identifier open_parenthese FORMALS close_parenthese STATEMENT_BLOCK
+                          | identifier identifier open_parenthese FORMALS close_parenthese STATEMENT_BLOCK // type r/r
+                          | type_void identifier open_parenthese FORMALS close_parenthese STATEMENT_BLOCK;
+FORMALS ::=  FORMAL | /* epsilon */;
+FORMAL ::=  VARIABLE | FORMAL colon VARIABLE;
+CLASS_DECLARATION ::=       keywords_class identifier INHERITANCE IMPLEMENTATION open_bracket  close_bracket
+                          |  keywords_class identifier INHERITANCE IMPLEMENTATION open_bracket FIELDS close_bracket;
+
+FIELDS ::=
+                            FIELDS FIELD
+                          | FIELD ;
+
+FIELD ::=                   ACCESSABILITY FUNCTION_DECLARATION {:msg("ACCESSABILITY FUNCTION_DECLARATION");:}
+                          | ACCESSABILITY VARIABLE_DECLARATION {:msg("ACCESSABILITY VARIABLE_DECLARATION");:} ;
+
+ACCESSABILITY ::=           keywords_private
+                          | keywords_protected
+                          | keywords_public
+                          |  /* epsilon */;
+INTERFACE_DECLARATION ::= keywords_interface identifier open_bracket PROTOTYPES close_bracket;
+PROTOTYPES ::=  PROTOTYPE PROTOTYPES | /* epsilon */;
+PROTOTYPE ::= TYPE identifier open_parenthese FORMALS close_parenthese semiColon
+               | identifier identifier open_parenthese FORMALS close_parenthese semiColon // type r\r
+                | type_void identifier open_parenthese FORMALS close_parenthese semiColon;
+
+STATEMENT_BLOCK ::=         open_bracket T1;
+T1::=                   VARIABLE_DECLARATION T1 | T2;
+T2 ::=                  STATEMENT T2 | close_bracket ;
+//STATEMENT_BLOCK ::=         open_bracket STMT_BLOCK_1 STMT_BLOCK_2 close_bracket;
+//
+//STMT_BLOCK_1 ::=            VARIABLE_DECLARATION STMT_BLOCK_1
+//                          | /* epsilon */;
+//STMT_BLOCK_2 ::=            STATEMENT STMT_BLOCK_2 | /* epsilon */;
+STATEMENT::=                EXPR semiColon
+                          |semiColon
+                          | IF_STMT
+                          | WHILE_STMT
+                          | FOR_STMT
+                          | BREAK_STMT
+                          | CONTINUE_STMT
+                          | RETURN_STMT
+                          | PRINT_STMT
+                          | STATEMENT_BLOCK;
+IF_STMT ::=                 keywords_if open_parenthese EXPR close_parenthese STATEMENT ELSE
+                          | keywords_if open_parenthese EXPR close_parenthese STATEMENT;
+ELSE ::=                  keywords_else STATEMENT ;
+
+WHILE_STMT::=             keywords_while open_parenthese EXPR close_parenthese STATEMENT;
+FOR_STMT ::=              keywords_for open_parenthese FOR_INIT semiColon EXPR semiColon FOR_CONDITION close_parenthese STATEMENT;
+FOR_INIT ::= EXPR | /* epsilon */;
+FOR_CONDITION::= EXPR | /* epsilon */;
+RETURN_STMT ::= keywords_return RETURN_VAL semiColon;
+RETURN_VAL ::= EXPR | /* epsilon */;
+BREAK_STMT ::= keywords_break;
+CONTINUE_STMT ::= keywords_continue;
+PRINT_STMT ::= keywords_Print open_parenthese PRINT_VAL close_parenthese semiColon;
+PRINT_VAL ::= EXPR | EXPR colon PRINT_VAL;
+//------------------------
+
+EXPR ::=                 LVALUE assign EXPR
+                        | CONSTANT
+                        | LVALUE
+                        | keywords_this
+                        | CALL
+                        | open_parenthese EXPR close_parenthese
+                        | EXPR plus EXPR
+                        | EXPR minus EXPR
+                        | EXPR mult EXPR
+                        | EXPR divide EXPR
+                        | EXPR mod EXPR
+                        | minus EXPR
+                        | EXPR lt EXPR
+                        | EXPR le EXPR
+                        | EXPR gt EXPR
+                        | EXPR ge EXPR
+                        | EXPR equal EXPR
+                        | EXPR nequal EXPR
+                        | EXPR and EXPR
+                        | EXPR or EXPR
+                        | exclamation  EXPR
+                        | keywords_ReadInteger open_parenthese close_parenthese
+                        | keywords_ReadLine open_parenthese close_parenthese
+                        | keywords_new identifier
+                        | key_words_NewArray open_parenthese EXPR colon TYPE close_parenthese
+                        | keywords_itod open_parenthese EXPR close_parenthese
+                        | keywords_dtoi open_parenthese EXPR close_parenthese
+                        | keywords_itob open_parenthese EXPR close_parenthese
+                        | keywords_btoi open_parenthese EXPR close_parenthese;
+
+
+LVALUE ::=               identifier
+                        | EXPR dot identifier
+                        | EXPR open_brace EXPR close_brace;
+CALL ::=                 identifier open_parenthese ACTUALS close_parenthese
+                        | EXPR dot identifier open_parenthese ACTUALS close_parenthese;
+
+ACTUALS ::=             ACTUAL | /* epsilon */;
+ACTUAL ::=              EXPR |  EXPR colon ACTUAL;
+CONSTANT ::=    numbers | bool_const | double_const | keywords_null; // check
+//------------------------
+INHERITANCE ::=             keywords_extends identifier
+                          | /* epsilon */;
+
+IMPLEMENTATION ::=          keywords_implements identifier
+                          | IMPLEMENTATION colon identifier
+                          | /* epsilon */;
